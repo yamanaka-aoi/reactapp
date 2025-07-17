@@ -1,9 +1,9 @@
-import './App.css';
+import './Start.css';
 
 const App = () => {
   return (
     <div className="App">
-      <p>Hello World</p>
+      <p>計算アプリ</p>
     </div>
   );
 }
