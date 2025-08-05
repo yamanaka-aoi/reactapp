@@ -1,3 +1,24 @@
-.App {
-  text-align: center;
+.title {
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+}
+
+p1 {
+  /*text-align: center;*/
+  font-size: 8vw;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 16px;
+
+}
+
+.button-group button {
+  width: 240px;
+  height: 96px;
+  font-size: 1.2rem;
 }
