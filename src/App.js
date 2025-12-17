@@ -1,22 +1,30 @@
+import './App.css';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import Level from './Level';
 
-import './Start.css';
-import { useNavigate } from 'react-router-dom';
-
-
-const App = () => {
+/* ===== スタート画面 ===== */
+const Start = () => {
   const navigate = useNavigate();
+
   return (
     <>
-      <div className="title">
-        <p1>計算アプリ</p1>
-      </div>
+      <h1 className="title">計算アプリ</h1>
 
       <div className="button-group">
-        <button onClick={() => navigate('/app2')}>ボタン1</button>
-        <button>ボタン2</button>
+        <button onClick={() => navigate('/level')}>始める</button>
+        <button disabled>作る</button>
       </div>
-      
     </>
+  );
+};
+
+/* ===== ルーティング管理 ===== */
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Start />} />
+      <Route path="/level" element={<Level />} />
+    </Routes>
   );
 }
 

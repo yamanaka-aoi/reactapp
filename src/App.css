@@ -1,0 +1,40 @@
+/* =========================
+   App（スタート画面）用スタイル
+========================= */
+.title {
+  margin: 0 auto;
+  width: fit-content;
+  font-size: 8vw;
+}
+
+/* =========================
+   ボタンエリア
+========================= */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 32px;
+  gap: 16px;
+}
+
+/* =========================
+   ボタン共通
+========================= */
+.button-group button {
+  width: 240px;
+  height: 96px;
+
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* =========================
+   無効ボタン
+========================= */
+.button-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
