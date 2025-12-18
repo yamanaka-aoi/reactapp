@@ -1,20 +1,51 @@
 import { useNavigate } from 'react-router-dom';
+import './Level.css';
 
 const Level = () => {
   const navigate = useNavigate();
 
+  const goToGame = (difficulty) => {
+    navigate('/game', {
+      state: { difficulty }
+    });
+  };
+
   return (
-    <>
-      <h1>レベル選択</h1>
+    <div className="level-container">
+      <h1>難易度を選択</h1>
 
-      <div className="level-buttons">
-        <button>かんたん</button>
-        <button>ふつう</button>
-        <button>むずかしい</button>
+      {/* 難易度ボタンエリア */}
+      <div className="level-box">
+        <button
+          className="level-button easy"
+          onClick={() => goToGame('かんたん')}
+        >
+          かんたん
+        </button>
+
+        <button
+          className="level-button normal"
+          onClick={() => goToGame('ふつう')}
+        >
+          ふつう
+        </button>
+
+        <button
+          className="level-button hard"
+          onClick={() => goToGame('むずかしい')}
+        >
+          むずかしい
+        </button>
+
+        {/* 左下に戻るボタン */}
+        <button
+          className="back-button"
+          onClick={() => navigate('/')}
+        >
+          戻る
+        </button>
       </div>
-
-      <button onClick={() => navigate('/')}>戻る</button>
-    </>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 /* =========================
-   App（スタート画面）用スタイル
+   タイトル
 ========================= */
 .title {
   margin: 0 auto;
@@ -14,8 +14,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-
   margin-top: 32px;
   gap: 16px;
 }
@@ -26,14 +24,10 @@
 .button-group button {
   width: 240px;
   height: 96px;
-
   font-size: 1.2rem;
   cursor: pointer;
 }
 
-/* =========================
-   無効ボタン
-========================= */
 .button-group button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
