@@ -7,64 +7,64 @@ const Teacher = ({ onLogout }) => {
   const [students, setStudents] = useState([]);
   const [newId, setNewId] = useState('');
 
-  // 🔁 初回読み込み
+  // 🔁 初回読み込み（studentIds）
   useEffect(() => {
     const saved = localStorage.getItem('studentIds');
-    if (saved) {
-      setStudents(JSON.parse(saved));
-    }
+    if (saved) setStudents(JSON.parse(saved));
   }, []);
 
-  // 💾 保存用関数
+  // 💾 保存（studentIds）
   const saveStudents = (list) => {
     setStudents(list);
     localStorage.setItem('studentIds', JSON.stringify(list));
   };
-  
 
-  // ➕ 生徒ID追加
+  // ➕ 追加
   const addStudent = () => {
-    if (!/^\d+$/.test(newId)) {
-      alert('生徒IDは数字のみです');
+    const id = newId.trim();
+
+    // 数字のみ（半角推奨）
+    if (!/^\d+$/.test(id)) {
+      alert('生徒IDは数字のみです（半角で入力してください）');
       return;
     }
-    if (students.includes(newId)) {
+    if (students.includes(id)) {
       alert('すでに存在するIDです');
       return;
     }
-    saveStudents([...students, newId]);
+    saveStudents([...students, id]);
     setNewId('');
   };
 
-  // ➖ 生徒ID削除
+  // ➖ 削除
   const removeStudent = (id) => {
-    const filtered = students.filter((s) => s !== id);
-    saveStudents(filtered);
+    saveStudents(students.filter((s) => s !== id));
   };
 
   return (
     <div style={{ maxWidth: '400px', margin: '40px auto' }}>
       <h1 style={{ textAlign: 'center' }}>教師画面</h1>
 
-      {/* 追加 */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <button onClick={() => navigate('/teacher/results')}>成績を確認</button>
+      </div>
+
       <h3>生徒ID追加</h3>
       <input
         value={newId}
         onChange={(e) => setNewId(e.target.value)}
         placeholder="数字ID"
       />
-      <button onClick={addStudent}>追加</button>
+      <button onClick={addStudent} style={{ marginLeft: '8px' }}>
+        追加
+      </button>
 
-      {/* 一覧 */}
       <h3 style={{ marginTop: '24px' }}>生徒一覧</h3>
       <ul>
         {students.map((id) => (
           <li key={id} style={{ marginBottom: '8px' }}>
             {id}
-            <button
-              onClick={() => removeStudent(id)}
-              style={{ marginLeft: '12px' }}
-            >
+            <button onClick={() => removeStudent(id)} style={{ marginLeft: '12px' }}>
               削除
             </button>
           </li>

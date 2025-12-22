@@ -120,7 +120,7 @@ const TeacherResults = () => {
         ))
       )}
 
-      <button onClick={() => navigate('/teacher')}>教師画面へ戻る</button>
+      <button onClick={() => navigate('/')}>戻る</button>
     </div>
   );
 };
