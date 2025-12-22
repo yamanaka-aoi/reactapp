@@ -5,84 +5,120 @@ const Game = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Level画面から渡された難易度
   const difficulty = location.state?.difficulty;
 
   const [questions, setQuestions] = useState([]);
-  const [index, setIndex] = useState(0);
-  const [answer, setAnswer] = useState('');
-  const [correctCount, setCorrectCount] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [input, setInput] = useState('');
+  const [answers, setAnswers] = useState([]);
 
-  // 🔁 問題読み込み
+  // ✅ 追加：開始時刻（ミリ秒）
+  const [startTimeMs, setStartTimeMs] = useState(null);
+
   useEffect(() => {
-    const allProblems =
-      JSON.parse(localStorage.getItem('problems')) || [];
+    if (!user) navigate('/');
+  }, [user, navigate]);
 
-    const myProblemSet = allProblems.find(
-      (p) =>
-        p.studentId === user.id &&
-        p.difficulty === difficulty
+  useEffect(() => {
+    if (!user || !difficulty) return;
+
+    const allProblems = JSON.parse(localStorage.getItem('problems')) || [];
+
+    const mySet = allProblems.find(
+      (p) => p.studentId === user.id && p.difficulty === difficulty
     );
 
-    if (!myProblemSet) {
+    if (!mySet) {
       alert('この難易度の問題がありません');
       navigate('/');
       return;
     }
 
-    setQuestions(myProblemSet.questions);
-  }, [user.id, difficulty, navigate]);
+    // 初期化
+    setQuestions(mySet.questions);
+    setCurrent(0);
+    setInput('');
+    setAnswers([]);
 
-  // ✅ 回答チェック
+    // ✅ 追加：計測開始（問題が読み込めたタイミングでスタート）
+    setStartTimeMs(Date.now());
+  }, [user, difficulty, navigate]);
+
+  const saveHistory = (historyItem) => {
+    const saved = JSON.parse(localStorage.getItem('results')) || [];
+    localStorage.setItem('results', JSON.stringify([historyItem, ...saved]));
+  };
+
   const submitAnswer = () => {
-    if (answer.trim() === '') return;
+    if (!input.trim()) return;
+    if (questions.length === 0) return;
 
-    if (
-      answer.trim() === questions[index].answer.trim()
-    ) {
-      setCorrectCount((c) => c + 1);
-    }
+    const correct = input.trim() === questions[current].answer.trim();
 
-    setAnswer('');
+    const currentResult = {
+      question: questions[current].text,
+      correctAnswer: questions[current].answer,
+      userAnswer: input,
+      correct
+    };
 
-    if (index + 1 < questions.length) {
-      setIndex(index + 1);
+    const nextResults = [...answers, currentResult];
+
+    setAnswers(nextResults);
+    setInput('');
+
+    if (current + 1 < questions.length) {
+      setCurrent(current + 1);
     } else {
-      setFinished(true);
+      // ✅ 最後：時間計測して保存
+      const endTimeMs = Date.now();
+      const durationMs =
+        startTimeMs != null ? endTimeMs - startTimeMs : null;
+
+      const correctCount = nextResults.filter((r) => r.correct).length;
+      const now = new Date().toISOString();
+
+      const historyItem = {
+        id: now, // 簡易ID
+        studentId: user.id,
+        difficulty,
+        correctCount,
+        total: nextResults.length,
+        results: nextResults,
+
+        // ✅ 追加：時間情報
+        startTimeMs,
+        endTimeMs,
+        durationMs,
+
+        createdAt: now
+      };
+
+      saveHistory(historyItem);
+
+      // 表示用に結果画面へ
+      navigate('/result', {
+        state: { results: nextResults }
+      });
     }
   };
 
-  // 🎉 終了画面
-  if (finished) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '40px' }}>
-        <h1>結果</h1>
-        <p>
-          {questions.length}問中 {correctCount}問 正解！
-        </p>
-        <button onClick={() => navigate('/')}>
-          スタートに戻る
-        </button>
-      </div>
-    );
-  }
+  if (!user) return <p>ログイン情報がありません。スタートへ戻ります…</p>;
+  if (!difficulty) return <p>難易度が選択されていません。戻って選択してください。</p>;
+  if (questions.length === 0) return <p>問題を読み込み中...</p>;
 
-  // 📝 問題表示
   return (
     <div style={{ maxWidth: '600px', margin: '40px auto' }}>
       <h2>
-        問題 {index + 1} / {questions.length}
+        問題 {current + 1} / {questions.length}
       </h2>
 
-      <p style={{ fontSize: '18px' }}>
-        {questions[index]?.text}
-      </p>
+      <p style={{ fontSize: '18px' }}>{questions[current].text}</p>
 
       <input
         type="text"
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
         placeholder="答えを入力"
         style={{ width: '100%', fontSize: '16px' }}
       />

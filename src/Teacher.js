@@ -20,6 +20,7 @@ const Teacher = ({ onLogout }) => {
     setStudents(list);
     localStorage.setItem('studentIds', JSON.stringify(list));
   };
+  
 
   // ➕ 生徒ID追加
   const addStudent = () => {

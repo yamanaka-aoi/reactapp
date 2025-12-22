@@ -21,18 +21,21 @@ const Start = ({ user, onLogout }) => {
         )}
 
         {/* 👨‍🏫 教師 */}
-{user.role === 'teacher' && (
-  <>
-    <button onClick={() => navigate('/teacher')}>
-      ログイン管理
-    </button>
+        {user.role === 'teacher' && (
+          <>
+            <button onClick={() => navigate('/create')}>
+              問題を作る
+            </button>
 
-    <button onClick={() => navigate('/create')}>
-      作る
-    </button>
-  </>
-)}
+            <button onClick={() => navigate('/teacher/results')}>
+              生徒の成績を見る
+            </button>
 
+            <button onClick={() => navigate('/teacher')}>
+              生徒ID管理
+            </button>
+          </>
+        )}
 
         <button onClick={onLogout}>ログアウト</button>
       </div>

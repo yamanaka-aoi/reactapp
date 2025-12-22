@@ -6,12 +6,15 @@ import Level from './Level';
 import Game from './Game';
 import Teacher from './Teacher';
 import Create from './Create';
+import Result from './Result';
+import TeacherResults from './TeacherResults';
+
 import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
 
-  // ログイン保持
+  // 🔁 ログイン保持
   useEffect(() => {
     const saved = localStorage.getItem('user');
     if (saved) {
@@ -19,7 +22,7 @@ function App() {
     }
   }, []);
 
-  // ログイン
+  // 🔐 ログイン
   const handleLogin = (id, role) => {
     const u = { id, role };
     setUser(u);
@@ -32,7 +35,7 @@ function App() {
     localStorage.removeItem('user');
   };
 
-  // 未ログイン
+  // 未ログイン時
   if (!user) {
     return <Login onLogin={handleLogin} />;
   }
@@ -44,10 +47,23 @@ function App() {
         path="/"
         element={<Start user={user} onLogout={handleLogout} />}
       />
+
       <Route path="/level" element={<Level />} />
-      <Route path="/game" element={<Game />} />
-      <Route path="/teacher" element={<Teacher onLogout={handleLogout} />} />
+
+      {/* ⭐ ここが重要 */}
+      <Route
+        path="/game"
+        element={<Game user={user} />}
+      />
+
+      <Route
+        path="/teacher"
+        element={<Teacher onLogout={handleLogout} />}
+      />
+
       <Route path="/create" element={<Create />} />
+      <Route path="/result" element={<Result />} />
+      <Route path="/teacher/results" element={<TeacherResults />} />
 
     </Routes>
   );

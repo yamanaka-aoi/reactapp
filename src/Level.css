@@ -1,71 +1,37 @@
-/* =========================
-   全体
-========================= */
 .level-container {
+  max-width: 400px;
+  margin: 40px auto;
   text-align: center;
 }
 
-/* =========================
-   難易度ボタンまとめ
-========================= */
-.level-box {
-  position: relative;
-  display: inline-block;
-  margin-top: 24px;
-  padding-bottom: 48px; /* 戻るボタン分の余白 */
-}
-
-/* =========================
-   見出し
-========================= */
-.level-container h1 {
+.level-title {
   margin-bottom: 24px;
 }
 
-/* =========================
-   難易度ボタン
-========================= */
-.level-button {
-  display: block;
-  margin: 12px auto;
-  width: 220px;
-  height: 64px;
-  font-size: 1.2rem;
-  cursor: pointer;
+.level-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* 色分け */
+.level-buttons button {
+  padding: 16px;
+  font-size: 1.2rem;
+}
+
+/* 難易度別色分け */
 .easy {
   background-color: #8bc34a;
 }
 
 .normal {
-  background-color: #ffc107;
+  background-color: #ff9800;
 }
 
 .hard {
   background-color: #f44336;
-  color: white;
 }
 
-/* =========================
-   戻るボタン（左下）
-========================= */
 .back-button {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-
-  padding: 8px 16px;
-  font-size: 1rem;
-
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-
-  cursor: pointer;
-}
-
-.back-button:hover {
-  background-color: #e0e0e0;
+  margin-top: 32px;
 }
