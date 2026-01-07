@@ -28,11 +28,14 @@ export default function ClassTeacher({ user }) {
     const total = submissions.length;
     if (!question) return { total, correct: 0, wrong: total };
 
-    const correct = submissions.filter((s) => String(s.answer).trim() === String(question.correct_answer).trim()).length;
+    const correct = submissions.filter(
+      (s) => String(s.answer).trim() === String(question.correct_answer).trim()
+    ).length;
     const wrong = total - correct;
     return { total, correct, wrong };
   }, [submissions, question]);
 
+  // 授業開始（コード発行）
   const startClass = async () => {
     setLoading(true);
     const code = makeCode();
@@ -55,6 +58,7 @@ export default function ClassTeacher({ user }) {
     setSubmissions([]);
   };
 
+  // 授業終了
   const endClass = async () => {
     if (!session) return;
 
@@ -101,7 +105,7 @@ export default function ClassTeacher({ user }) {
     }
 
     setQuestion(data);
-    setSubmissions([]); // 新しい問題を出したら一旦リセット（この問題の提出だけ表示したいので）
+    setSubmissions([]); // 新しい問題を出したら、この問題の提出だけ表示したいのでリセット
   };
 
   // 先生が入室したら「最新問題」を取得（念のため）
@@ -184,7 +188,10 @@ export default function ClassTeacher({ user }) {
 
           setSubmissions((prev) => {
             const rest = prev.filter((x) => x.student_id !== row.student_id);
-            return [{ student_id: row.student_id, answer: row.answer, updated_at: row.updated_at }, ...rest];
+            return [
+              { student_id: row.student_id, answer: row.answer, updated_at: row.updated_at },
+              ...rest,
+            ];
           });
         }
       )
@@ -195,18 +202,32 @@ export default function ClassTeacher({ user }) {
     };
   }, [session, question]);
 
+  // ✅ こどもよう ひょうじ（別タブで開く）
+  const openBoard = () => {
+    if (!session) return;
+    window.open(`/class/board/${session.id}`, '_blank');
+  };
+
   return (
     <div style={{ maxWidth: 980, margin: '30px auto', padding: '0 12px' }}>
       <h1>授業問題（教師）</h1>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
         <button onClick={() => navigate('/')}>スタートへ</button>
+
         {!session ? (
           <button onClick={startClass} disabled={loading}>
             {loading ? '開始中...' : '授業を開始（コード発行）'}
           </button>
         ) : (
           <button onClick={endClass}>授業を終了</button>
+        )}
+
+        {/* ✅ 追加：こども用表示（sessionがある時だけ） */}
+        {session && (
+          <button onClick={openBoard}>
+            こどもよう ひょうじ
+          </button>
         )}
       </div>
 

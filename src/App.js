@@ -12,6 +12,8 @@ import TeacherResults from './TeacherResults';
 import TeacherResultDetail from './TeacherResultDetail';
 import ClassStudent from './ClassStudent';
 import ClassTeacher from './ClassTeacher';
+import ClassBoard from './ClassBoard';
+
 
 
 import './App.css';
@@ -64,6 +66,12 @@ function App() {
         path="/class/teacher"
         element={user.role === 'teacher' ? <ClassTeacher user={user} /> : <Navigate to="/" replace />}
       />
+
+      <Route
+        path="/class/board/:sessionId" 
+        element={<ClassBoard />}
+      />
+
 
 
       {/* =====================
