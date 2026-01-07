@@ -5,18 +5,18 @@ import { supabase } from './supabaseClient';
 export default function ClassStudent({ user }) {
   const navigate = useNavigate();
 
-  // じゅぎょうこーど（6けた・きーぱっどのみ）
+  // ジュギョウコード（6けた・キーパッドのみ）
   const [code, setCode] = useState('');
 
   const [session, setSession] = useState(null);   // { id, code }
   const [question, setQuestion] = useState(null); // { id, text }
 
-  // こたえ（きーぱっどのみ）
+  // コタエ（キーパッドのみ）
   const [answer, setAnswer] = useState('');
   const [sending, setSending] = useState(false);
 
   /* =========================
-     じゅぎょうこーど：きーぱっど
+     ジュギョウコード：キーパッド
   ========================= */
   const appendCodeDigit = (d) => {
     setCode((prev) => {
@@ -34,7 +34,7 @@ export default function ClassStudent({ user }) {
   };
 
   /* =========================
-     こたえ：きーぱっど
+     コタエ：キーパッド
   ========================= */
   const appendAnswerDigit = (d) => {
     setAnswer((prev) => {
@@ -52,11 +52,11 @@ export default function ClassStudent({ user }) {
   };
 
   /* =========================
-     さんか
+     サンカ
   ========================= */
   const join = async () => {
     if (!/^\d{6}$/.test(code)) {
-      alert('じゅぎょうこーどは 6けたの すうじです');
+      alert('ジュギョウコードは 6けたの すうじです');
       return;
     }
 
@@ -68,11 +68,11 @@ export default function ClassStudent({ user }) {
       .maybeSingle();
 
     if (error) {
-      alert('さんかに しっぱいしました');
+      alert('サンカに しっぱいしました');
       return;
     }
     if (!data) {
-      alert('その じゅぎょうは ありません');
+      alert('その ジュギョウは ありません');
       return;
     }
 
@@ -82,7 +82,7 @@ export default function ClassStudent({ user }) {
   };
 
   /* =========================
-     もんだい よみこみ
+     モンダイ よみこみ
   ========================= */
   useEffect(() => {
     if (!session) return;
@@ -100,7 +100,7 @@ export default function ClassStudent({ user }) {
   }, [session]);
 
   /* =========================
-     りあるたいむ：もんだい
+     リアルタイム：モンダイ
   ========================= */
   useEffect(() => {
     if (!session) return;
@@ -130,7 +130,7 @@ export default function ClassStudent({ user }) {
   }, [session]);
 
   /* =========================
-     そうしん
+     ソウシン
   ========================= */
   const sendAnswer = async () => {
     if (!session || !question) return;
@@ -171,14 +171,14 @@ export default function ClassStudent({ user }) {
         <>
           <p>
             せんせいから きいた<br />
-            「じゅぎょうこーど（6けた）」を<br />
+            「じゅぎょうコード（6けた）」を<br />
             にゅうりょくして さんかします。
           </p>
 
           <input
             value={code}
             readOnly
-            placeholder="6けたの こーど"
+            placeholder="6けた の コード"
             style={{
               width: '100%',
               fontSize: 22,
@@ -219,7 +219,7 @@ export default function ClassStudent({ user }) {
           </p>
 
           <div style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8 }}>
-            <h3>せんせいの もんだい</h3>
+            <h3>せんせい の もんだい</h3>
             {question ? (
               <p style={{ fontSize: 18 }}>{question.text}</p>
             ) : (
@@ -227,12 +227,12 @@ export default function ClassStudent({ user }) {
             )}
           </div>
 
-          <h3 style={{ marginTop: 16 }}>こたえ（きーぱっど）</h3>
+          <h3 style={{ marginTop: 16 }}>コタエ（キーパッド）</h3>
 
           <input
             value={answer}
             readOnly
-            placeholder="ここに でます"
+            placeholder="ここに ひょうじ されます"
             style={{
               width: '100%',
               fontSize: 22,
@@ -267,12 +267,12 @@ export default function ClassStudent({ user }) {
             disabled={!question || sending || answer === ''}
             style={{ marginTop: 12, width: '100%' }}
           >
-            {sending ? 'そうしんちゅう…' : 'そうしん'}
+            {sending ? 'ソウシンちゅう…' : 'ソウシン'}
           </button>
 
           <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-            <button onClick={leave}>たいしゅつ</button>
-            <button onClick={() => navigate('/')}>すたーとへ</button>
+            <button onClick={leave}>タイシュツ</button>
+            <button onClick={() => navigate('/')}>スタート へ</button>
           </div>
         </>
       )}
