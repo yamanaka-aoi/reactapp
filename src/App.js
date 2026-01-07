@@ -8,6 +8,7 @@ import Game from './Game';
 import Teacher from './Teacher';
 import Create from './Create';
 import TeacherResults from './TeacherResults';
+import TeacherResultDetail from './TeacherResultDetail';
 
 import './App.css';
 
@@ -41,6 +42,7 @@ function App() {
       <Route path="/teacher" element={<Teacher onLogout={handleLogout} />} />
       <Route path="/create" element={<Create />} />
       <Route path="/teacher/results" element={<TeacherResults />} />
+      <Route path="/teacher/results/:resultId" element={<TeacherResultDetail />} />
     </Routes>
   );
 }

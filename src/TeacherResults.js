@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 
 const diffLabel = (d) => (d === 'easy' ? 'かんたん' : d === 'normal' ? 'ふつう' : 'むずかしい');
-
 const msToSec = (ms) => (ms == null ? '-' : (ms / 1000).toFixed(1) + '秒');
 
 export default function TeacherResults() {
@@ -53,6 +52,7 @@ export default function TeacherResults() {
               <th>難易度</th>
               <th>正解</th>
               <th>所要時間</th>
+              <th>詳細</th>
             </tr>
           </thead>
           <tbody>
@@ -63,6 +63,11 @@ export default function TeacherResults() {
                 <td>{diffLabel(r.difficulty)}</td>
                 <td>{r.correct_count} / {r.total}</td>
                 <td>{msToSec(r.duration_ms)}</td>
+                <td>
+                  <button onClick={() => navigate(`/teacher/results/${r.id}`)}>
+                    表示
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
