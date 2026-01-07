@@ -5,10 +5,14 @@ import Login from './Login';
 import Start from './Start';
 import Level from './Level';
 import Game from './Game';
+import Result from './Result';
 import Teacher from './Teacher';
 import Create from './Create';
 import TeacherResults from './TeacherResults';
 import TeacherResultDetail from './TeacherResultDetail';
+import ClassStudent from './ClassStudent';
+import ClassTeacher from './ClassTeacher';
+
 
 import './App.css';
 
@@ -50,6 +54,17 @@ function App() {
         path="/"
         element={<Start user={user} onLogout={handleLogout} />}
       />
+
+      <Route
+      path="/class"
+      element={user.role === 'student' ? <ClassStudent user={user} /> : <Navigate to="/" replace />}
+      />
+
+      <Route
+        path="/class/teacher"
+        element={user.role === 'teacher' ? <ClassTeacher user={user} /> : <Navigate to="/" replace />}
+      />
+
 
       {/* =====================
           生徒のみ
@@ -108,6 +123,15 @@ function App() {
           user.role === 'teacher'
             ? <TeacherResultDetail />
             : <Navigate to="/" replace />
+        }
+      />
+
+      <Route
+       path="/result"
+        element={
+          user.role === 'student' 
+          ? <Result /> 
+          : <Navigate to="/" replace />
         }
       />
 

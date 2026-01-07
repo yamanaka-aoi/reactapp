@@ -15,14 +15,19 @@ const Start = ({ user, onLogout }) => {
       <div className="button-group">
         {/* 👨‍🎓 生徒 */}
         {user.role === 'student' && (
-          <button onClick={() => navigate('/level')}>
-            始める
-          </button>
+          <>
+          <button onClick={() => navigate('/level')}>始める</button>
+          <button onClick={() => navigate('/class')}>授業</button>
+          </>
         )}
 
         {/* 👨‍🏫 教師 */}
         {user.role === 'teacher' && (
           <>
+            <button onClick={() => navigate('/class/teacher')}>
+              授業問題
+            </button>
+
             <button onClick={() => navigate('/create')}>
               問題を作る
             </button>

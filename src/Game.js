@@ -16,12 +16,13 @@ export default function Game({ user }) {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
 
+  // キーパッド入力用（文字列で保持：2桁以上OK）
   const [input, setInput] = useState('');
   const [answers, setAnswers] = useState([]);
 
   const [startTimeMs, setStartTimeMs] = useState(null);
 
-  // 画像表示（あなたの仕様：A/Cクリック後、B/Dクリックで枚数表示）
+  // 画像表示（A/Cクリック後、B/Dクリックで枚数表示）
   const [leftItem, setLeftItem] = useState(null);
   const [rightItem, setRightItem] = useState(null);
   const [leftCount, setLeftCount] = useState(0);
@@ -39,7 +40,6 @@ export default function Game({ user }) {
     if (!user || !difficulty) return;
 
     (async () => {
-      // ① set を探す（最新1件）
       const { data: sets, error: setErr } = await supabase
         .from('problem_sets')
         .select('id, created_at')
@@ -62,7 +62,6 @@ export default function Game({ user }) {
 
       const setId = sets[0].id;
 
-      // ② questions を取得
       const { data: qs, error: qErr } = await supabase
         .from('questions')
         .select('id, a, b, c, d')
@@ -99,7 +98,9 @@ export default function Game({ user }) {
   const D = q.d;
 
   const questionText = `${A}が${B}こ、${C}が${D}こあります。ぜんぶでなんこ？`;
-  const correctAnswer = String(B + D);
+
+  // ✅ 正答は数として計算 → 文字列化（0でもOK）
+  const correctAnswer = String(Number(B) + Number(D));
 
   const leftSrc = leftItem ? ITEM_IMAGE[leftItem] : null;
   const rightSrc = rightItem ? ITEM_IMAGE[rightItem] : null;
@@ -121,8 +122,32 @@ export default function Game({ user }) {
     setRightCount(Number(D));
   };
 
-  const saveResultToDb = async (nextResults, durationMs, endTimeMs) => {
-    // results 1件 insert → id 取得
+  // =========================
+  // ✅ キーパッド操作
+  // =========================
+
+  // 2桁以上OK：文字列にどんどん追加
+  // 先頭0は「0」単体以外では避ける（例：0→5で「5」）
+  const appendDigit = (d) => {
+    const digit = String(d);
+
+    setInput((prev) => {
+      if (prev === '0') {
+        return digit; // 0の次に数字が来たら置き換え
+      }
+      return prev + digit;
+    });
+  };
+
+  const backspace = () => {
+    setInput((prev) => prev.slice(0, -1));
+  };
+
+  const clearInput = () => {
+    setInput('');
+  };
+
+  const saveResultToDb = async (nextResults, durationMs) => {
     const { data: resRow, error: resErr } = await supabase
       .from('results')
       .insert([{
@@ -142,7 +167,6 @@ export default function Game({ user }) {
 
     const resultId = resRow.id;
 
-    // result_items をまとめて insert
     const items = nextResults.map(r => ({
       result_id: resultId,
       question_text: r.question,
@@ -159,8 +183,16 @@ export default function Game({ user }) {
   };
 
   const submitAnswer = async () => {
-    if (!input.trim()) return;
+    // ✅ 入力が空なら送信しない（0はOK：'0'は空じゃない）
+    if (input === '') return;
 
+    // ✅ 数字以外は弾く（キーパッドだけなら基本起きないが保険）
+    if (!/^\d+$/.test(input)) {
+      alert('数字のみ入力してください');
+      return;
+    }
+
+    // ✅ 正答が0でもOK（'0' === '0'）
     const correct = input.trim() === correctAnswer.trim();
 
     const currentResult = {
@@ -182,22 +214,28 @@ export default function Game({ user }) {
       return;
     }
 
-    // 最後：時間測ってDB保存して結果画面へ
     const endTimeMs = Date.now();
     const durationMs = startTimeMs != null ? endTimeMs - startTimeMs : null;
 
-    await saveResultToDb(nextResults, durationMs, endTimeMs);
+    await saveResultToDb(nextResults, durationMs);
 
     navigate('/result', {
       state: { results: nextResults, durationMs, difficulty },
     });
   };
 
+  // Enterキーでも送信（PC向け）
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') submitAnswer();
+    if (e.key === 'Backspace') backspace();
+    if (e.key === 'Escape') clearInput();
+  };
+
   return (
     <div style={{ maxWidth: '850px', margin: '40px auto' }}>
       <h2>問題 {current + 1} / {questions.length}</h2>
 
-      {/* 問題文：A/Cクリック→画像、B/Dクリック→枚数表示 */}
+      {/* 問題文：A/Cクリック→画像、B/Dクリックで枚数表示 */}
       <div style={{ fontSize: '18px', lineHeight: 1.8 }}>
         <span
           onClick={handleClickA}
@@ -240,17 +278,55 @@ export default function Game({ user }) {
         <span>こあります。ぜんぶでなんこ？</span>
       </div>
 
+      {/* ✅ キーパッド入力専用表示 */}
       <input
         type="text"
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        readOnly
+        onKeyDown={onKeyDown}
         placeholder="答えを入力"
-        style={{ width: '100%', fontSize: '16px', marginTop: '16px' }}
+        style={{
+          width: '100%',
+          fontSize: '22px',
+          marginTop: '16px',
+          padding: '10px',
+          textAlign: 'center',
+          letterSpacing: '2px',
+        }}
       />
 
+      {/* ✅ キーパッド（0〜9 / クリア / 1文字消す） */}
+      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+          <button
+            key={n}
+            onClick={() => appendDigit(n)}
+            style={{ padding: '16px 0', fontSize: 20 }}
+          >
+            {n}
+          </button>
+        ))}
+
+        <button onClick={clearInput} style={{ padding: '16px 0', fontSize: 18 }}>
+          C
+        </button>
+
+        <button onClick={() => appendDigit(0)} style={{ padding: '16px 0', fontSize: 20 }}>
+          0
+        </button>
+
+        <button onClick={backspace} style={{ padding: '16px 0', fontSize: 18 }}>
+          ⌫
+        </button>
+      </div>
+
       <div style={{ marginTop: 16 }}>
-        <button onClick={submitAnswer}>次へ</button>
-        <button onClick={() => navigate('/')} style={{ marginLeft: 12 }}>戻る</button>
+        <button onClick={submitAnswer} disabled={input === ''}>
+          OK / 次へ
+        </button>
+        <button onClick={() => navigate('/')} style={{ marginLeft: 12 }}>
+          戻る
+        </button>
       </div>
 
       {/* 画像（枠・ラベル無し） */}
