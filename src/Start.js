@@ -6,7 +6,7 @@ const Start = ({ user, onLogout }) => {
 
   return (
     <>
-      <h1 className="title">計算アプリ</h1>
+      <h1 className="title">けいさんアプリ</h1>
 
       <p style={{ textAlign: 'center' }}>
         ログインID：{user.id}（{user.role}）

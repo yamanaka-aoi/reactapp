@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const ITEM_IMAGE = {
   'りんご': '/images/apple.png',
   'みかん': '/images/orange.png',
-  'ばなな': '/images/banana.png',
+  'バナナ': '/images/banana.png',
 };
 
 const Game = ({ user }) => {
