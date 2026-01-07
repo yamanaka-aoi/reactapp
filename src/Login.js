@@ -1,79 +1,121 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from './supabaseClient';
 
-const Login = ({ onLogin }) => {
-  const navigate = useNavigate(); // 追加
+export default function Login({ onLogin }) {
   const [id, setId] = useState('');
-  const [role, setRole] = useState('student');
-  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState('student'); // student / teacher
 
-  const handleLogin = async () => {
+  // ===== キーパッド操作 =====
+  const appendDigit = (d) => {
+    const digit = String(d);
+    setId((prev) => {
+      // 先頭0もOK。最大桁数はお好みで（ここは10桁まで）
+      if (prev.length >= 10) return prev;
+      return prev + digit;
+    });
+  };
+
+  const backspace = () => {
+    setId((prev) => prev.slice(0, -1));
+  };
+
+  const clear = () => {
+    setId('');
+  };
+
+  // ===== ログイン処理 =====
+  const handleLogin = () => {
     const userId = id.trim();
 
+    // 数字だけ（空も弾く）
     if (!/^\d+$/.test(userId)) {
-      alert('IDは数字のみ（半角）');
+      alert('IDは すうじ だけです');
       return;
     }
 
-    // 教師
+    // 教師ログイン（教師ID固定：9999）
     if (role === 'teacher') {
       if (userId !== '9999') {
-        alert('教師IDが違います（例：9999）');
+        alert('せんせい の ID が ちがいます（れい：9999）');
         return;
       }
       onLogin(userId, 'teacher');
-      navigate('/teacher'); // ← 教師は教師画面へ
       return;
     }
 
-    // 生徒（DB確認）
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('students')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle();
-    setLoading(false);
-
-    if (error) {
-      alert('ログイン確認に失敗: ' + error.message);
-      return;
-    }
-    if (!data) {
-      alert('その生徒IDは登録されていません');
+    // 生徒ログイン：登録済みIDかチェック
+    const studentIds = JSON.parse(localStorage.getItem('studentIds')) || [];
+    if (!studentIds.includes(userId)) {
+      alert('その せいとID は とうろく されていません（せんせいが ついか してください）');
       return;
     }
 
     onLogin(userId, 'student');
-    navigate('/'); // ← 生徒はスタート画面へ（2枚目）
   };
 
   return (
-    <div style={{ maxWidth: '360px', margin: '40px auto' }}>
+    <div style={{ maxWidth: 360, margin: '40px auto', padding: '0 12px' }}>
       <h1 style={{ textAlign: 'center' }}>ログイン</h1>
 
-      <div style={{ marginBottom: '12px' }}>
-        <label>役割：</label>{' '}
-        <select value={role} onChange={(e) => setRole(e.target.value)} disabled={loading}>
-          <option value="student">生徒</option>
-          <option value="teacher">教師</option>
+      <div style={{ marginBottom: 12 }}>
+        <label>やくわり：</label>{' '}
+        <select value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="student">せいと</option>
+          <option value="teacher">せんせい</option>
         </select>
       </div>
 
+      {/* ✅ 表示だけ（手入力NG） */}
       <input
         value={id}
-        onChange={(e) => setId(e.target.value)}
-        placeholder="数字IDを入力"
-        style={{ width: '100%', fontSize: '16px' }}
-        disabled={loading}
+        readOnly
+        placeholder="すうじID を いれてね"
+        style={{
+          width: '100%',
+          fontSize: 22,
+          padding: 10,
+          textAlign: 'center',
+          letterSpacing: '2px',
+        }}
       />
 
-      <button onClick={handleLogin} style={{ marginTop: '12px', width: '100%' }} disabled={loading}>
-        {loading ? '確認中...' : 'ログイン'}
+      {/* ✅ キーパッド */}
+      <div
+        style={{
+          marginTop: 14,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10,
+        }}
+      >
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+          <button
+            key={n}
+            onClick={() => appendDigit(n)}
+            style={{ padding: '16px 0', fontSize: 20 }}
+          >
+            {n}
+          </button>
+        ))}
+        <button onClick={clear} style={{ padding: '16px 0', fontSize: 18 }}>
+          C
+        </button>
+        <button onClick={() => appendDigit(0)} style={{ padding: '16px 0', fontSize: 20 }}>
+          0
+        </button>
+        <button onClick={backspace} style={{ padding: '16px 0', fontSize: 18 }}>
+          ⌫
+        </button>
+      </div>
+
+      <button onClick={handleLogin} style={{ marginTop: 12, width: '100%' }}>
+        ログイン
       </button>
+
+      <p style={{ marginTop: 12, opacity: 0.7 }}>
+        ※ せいとID は せんせい が ついか したものだけ つかえます
+      </p>
+
+     
     </div>
   );
-};
-
-export default Login;
+}
