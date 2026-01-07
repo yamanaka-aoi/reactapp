@@ -1,128 +1,73 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from './supabaseClient';
 
-const labelDifficulty = (d) => {
-  if (d === 'easy') return 'かんたん';
-  if (d === 'normal') return 'ふつう';
-  if (d === 'hard') return 'むずかしい';
-  return d;
-};
+const diffLabel = (d) => (d === 'easy' ? 'かんたん' : d === 'normal' ? 'ふつう' : 'むずかしい');
 
-// ✅ ミリ秒 → mm:ss 形式に変換
-const formatDuration = (ms) => {
-  if (ms == null || Number.isNaN(ms)) return '—';
+const msToSec = (ms) => (ms == null ? '-' : (ms / 1000).toFixed(1) + '秒');
 
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  const mm = String(minutes).padStart(2, '0');
-  const ss = String(seconds).padStart(2, '0');
-  return `${mm}:${ss}`;
-};
-
-const TeacherResults = () => {
+export default function TeacherResults() {
   const navigate = useNavigate();
-
-  const [histories, setHistories] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState('all');
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('results')) || [];
-    setHistories(saved);
+    (async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('results')
+        .select('id, student_id, difficulty, correct_count, total, duration_ms, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      setLoading(false);
+
+      if (error) {
+        alert('成績の取得に失敗: ' + error.message);
+        return;
+      }
+
+      setRows(data || []);
+    })();
   }, []);
 
-  const studentIds = useMemo(() => {
-    const set = new Set(histories.map((h) => h.studentId));
-    return Array.from(set);
-  }, [histories]);
-
-  const filtered = useMemo(() => {
-    if (selectedStudent === 'all') return histories;
-    return histories.filter((h) => h.studentId === selectedStudent);
-  }, [histories, selectedStudent]);
-
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto' }}>
-      <h1 style={{ textAlign: 'center' }}>成績一覧（教師）</h1>
+    <div style={{ maxWidth: 900, margin: '30px auto', padding: '0 12px' }}>
+      <h1>生徒の成績（DB）</h1>
 
-      <div style={{ marginBottom: '16px' }}>
-        <label>生徒IDで絞り込み：</label>{' '}
-        <select
-          value={selectedStudent}
-          onChange={(e) => setSelectedStudent(e.target.value)}
-        >
-          <option value="all">全員</option>
-          {studentIds.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </select>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+        <button onClick={() => navigate('/teacher')}>戻る</button>
       </div>
 
-      {filtered.length === 0 ? (
-        <p>まだ成績データがありません。</p>
+      {loading ? (
+        <p>読み込み中...</p>
+      ) : rows.length === 0 ? (
+        <p>まだ結果がありません</p>
       ) : (
-        filtered.map((h) => (
-          <div
-            key={h.id}
-            style={{
-              border: '1px solid #ccc',
-              padding: '12px',
-              marginBottom: '12px'
-            }}
-          >
-            <p>
-              <strong>生徒ID：</strong>
-              {h.studentId}
-            </p>
-
-            <p>
-              <strong>難易度：</strong>
-              {labelDifficulty(h.difficulty)}
-            </p>
-
-            <p>
-              <strong>日時：</strong>
-              {h.createdAt}
-            </p>
-
-            <p>
-              <strong>得点：</strong>
-              {h.correctCount} / {h.total}
-            </p>
-
-            {/* ✅ 追加：所要時間 */}
-            <p>
-              <strong>所要時間：</strong>
-              {formatDuration(h.durationMs)}
-            </p>
-
-            <details>
-              <summary>回答の詳細を見る</summary>
-              <ol>
-                {h.results.map((r, idx) => (
-                  <li key={idx} style={{ marginBottom: '10px' }}>
-                    <div>
-                      <strong>問題：</strong>
-                      {r.question}
-                    </div>
-                    <div>あなたの答え：{r.userAnswer}</div>
-                    <div>
-                      正解：{r.correctAnswer} {r.correct ? '〇' : '✕'}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </details>
-          </div>
-        ))
+        <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th>日時</th>
+              <th>生徒ID</th>
+              <th>難易度</th>
+              <th>正解</th>
+              <th>所要時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td>{new Date(r.created_at).toLocaleString()}</td>
+                <td>{r.student_id}</td>
+                <td>{diffLabel(r.difficulty)}</td>
+                <td>{r.correct_count} / {r.total}</td>
+                <td>{msToSec(r.duration_ms)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-
-      <button onClick={() => navigate('/')}>戻る</button>
     </div>
   );
-};
-
-export default TeacherResults;
+}

@@ -1,56 +1,21 @@
 import { useNavigate } from 'react-router-dom';
-import './Level.css';
 
-const Level = () => {
+export default function Level({ user }) {
   const navigate = useNavigate();
 
+  const go = (difficulty) => {
+    navigate('/game', { state: { difficulty } });
+  };
+
   return (
-    <div className="level-container">
-      <h1 className="level-title">レベルを選んでください</h1>
-
-      <div className="level-buttons">
-        <button
-          className="easy"
-          onClick={() =>
-            navigate('/game', {
-              state: { difficulty: 'easy' }
-            })
-          }
-        >
-          かんたん
-        </button>
-
-        <button
-          className="normal"
-          onClick={() =>
-            navigate('/game', {
-              state: { difficulty: 'normal' }
-            })
-          }
-        >
-          ふつう
-        </button>
-
-        <button
-          className="hard"
-          onClick={() =>
-            navigate('/game', {
-              state: { difficulty: 'hard' }
-            })
-          }
-        >
-          むずかしい
-        </button>
+    <div style={{ maxWidth: 420, margin: '40px auto' }}>
+      <h1>難易度</h1>
+      <button onClick={() => go('easy')}>かんたん</button>
+      <button onClick={() => go('normal')} style={{ marginLeft: 8 }}>ふつう</button>
+      <button onClick={() => go('hard')} style={{ marginLeft: 8 }}>むずかしい</button>
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => navigate('/')}>戻る</button>
       </div>
-
-      <button
-        className="back-button"
-        onClick={() => navigate('/')}
-      >
-        戻る
-      </button>
     </div>
   );
-};
-
-export default Level;
+}
