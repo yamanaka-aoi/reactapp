@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import Login from './Login';
@@ -15,34 +15,106 @@ import './App.css';
 function App() {
   const [user, setUser] = useState(null);
 
+  // 🔁 ログイン状態を復元
   useEffect(() => {
     const saved = localStorage.getItem('user');
-    if (saved) setUser(JSON.parse(saved));
+    if (saved) {
+      setUser(JSON.parse(saved));
+    }
   }, []);
 
+  // 🔐 ログイン
   const handleLogin = (id, role) => {
     const u = { id, role };
     setUser(u);
     localStorage.setItem('user', JSON.stringify(u));
   };
 
+  // 🔓 ログアウト
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
   };
 
-  if (!user) return <Login onLogin={handleLogin} />;
+  // ❌ 未ログインなら必ずログイン画面
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <Routes>
-      <Route path="/" element={<Start user={user} onLogout={handleLogout} />} />
-      <Route path="/level" element={<Level user={user} />} />
-      <Route path="/game" element={<Game user={user} />} />
+      {/* =====================
+          共通（ログイン後）
+      ===================== */}
+      <Route
+        path="/"
+        element={<Start user={user} onLogout={handleLogout} />}
+      />
 
-      <Route path="/teacher" element={<Teacher onLogout={handleLogout} />} />
-      <Route path="/create" element={<Create />} />
-      <Route path="/teacher/results" element={<TeacherResults />} />
-      <Route path="/teacher/results/:resultId" element={<TeacherResultDetail />} />
+      {/* =====================
+          生徒のみ
+      ===================== */}
+      <Route
+        path="/level"
+        element={
+          user.role === 'student'
+            ? <Level user={user} />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      <Route
+        path="/game"
+        element={
+          user.role === 'student'
+            ? <Game user={user} />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      {/* =====================
+          教師のみ
+      ===================== */}
+      <Route
+        path="/teacher"
+        element={
+          user.role === 'teacher'
+            ? <Teacher onLogout={handleLogout} />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      <Route
+        path="/create"
+        element={
+          user.role === 'teacher'
+            ? <Create />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      <Route
+        path="/teacher/results"
+        element={
+          user.role === 'teacher'
+            ? <TeacherResults />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      <Route
+        path="/teacher/results/:resultId"
+        element={
+          user.role === 'teacher'
+            ? <TeacherResultDetail />
+            : <Navigate to="/" replace />
+        }
+      />
+
+      {/* =====================
+          それ以外はスタートへ
+      ===================== */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
