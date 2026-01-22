@@ -20,7 +20,6 @@ export default function Game({ user }) {
   const [input, setInput] = useState('');
   const [answers, setAnswers] = useState([]);
 
-  const [startTimeMs, setStartTimeMs] = useState(null);
 
   // 画像表示（A/Cタップ→表示、B/Dタップ→枚数）
   const [leftItem, setLeftItem] = useState(null);
@@ -81,7 +80,6 @@ export default function Game({ user }) {
       setCurrent(0);
       setInput('');
       setAnswers([]);
-      setStartTimeMs(Date.now());
 
       setLeftItem(null);
       setRightItem(null);
