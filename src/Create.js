@@ -157,7 +157,7 @@ export default function Create() {
           </select>
         </div>
 
-        <button onClick={() => navigate('/teacher')} style={{ marginLeft: 'auto' }}>
+        <button onClick={() => navigate('/start')} style={{ marginLeft: 'auto' }}>
           戻る
         </button>
       </div>

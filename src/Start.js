@@ -44,6 +44,10 @@ const Start = ({ user, onLogout }) => {
               生徒ID管理
             </button>
 
+            <button onClick={() => navigate('/teacher/results')}>
+              成績 を 見る
+            </button>
+
             <button onClick={() => navigate('/create')}>
               問題を作る
             </button>

@@ -78,11 +78,9 @@ const Teacher = ({ onLogout }) => {
 
   return (
     <div style={{ maxWidth: '420px', margin: '40px auto' }}>
-      <h1 style={{ textAlign: 'center' }}>教師画面</h1>
+      <h1 style={{ textAlign: 'center' }}>ID追加画面</h1>
 
       <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
-        <button onClick={() => navigate('/create')}>問題を作る</button>
-        <button onClick={() => navigate('/teacher/results')}>生徒の成績を見る</button>
         <button onClick={() => navigate('/')}>スタートへ戻る</button>
         <button onClick={onLogout}>ログアウト</button>
       </div>

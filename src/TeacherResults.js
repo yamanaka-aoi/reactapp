@@ -36,7 +36,7 @@ export default function TeacherResults() {
       <h1>生徒の成績（DB）</h1>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-        <button onClick={() => navigate('/teacher')}>戻る</button>
+        <button onClick={() => navigate('/start')}>戻る</button>
       </div>
 
       {loading ? (

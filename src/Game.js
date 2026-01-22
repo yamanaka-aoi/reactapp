@@ -16,19 +16,20 @@ export default function Game({ user }) {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
 
-  // キーパッド入力用（文字列で保持：2桁以上OK）
+  // キーパッド入力（手入力なし）
   const [input, setInput] = useState('');
   const [answers, setAnswers] = useState([]);
 
   const [startTimeMs, setStartTimeMs] = useState(null);
 
-  // 画像表示（A/Cクリック後、B/Dクリックで枚数表示）
+  // 画像表示（A/Cタップ→表示、B/Dタップ→枚数）
   const [leftItem, setLeftItem] = useState(null);
   const [rightItem, setRightItem] = useState(null);
   const [leftCount, setLeftCount] = useState(0);
   const [rightCount, setRightCount] = useState(0);
 
-  const imageStyle = { width: '120px', height: '120px', objectFit: 'contain' };
+  // 画像サイズ（少し小さく統一）
+  const imageStyle = { width: '96px', height: '96px', objectFit: 'contain' };
 
   // 未ログイン
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function Game({ user }) {
     if (!user || !difficulty) return;
 
     (async () => {
+      // ① set を探す（最新1件）
       const { data: sets, error: setErr } = await supabase
         .from('problem_sets')
         .select('id, created_at')
@@ -49,19 +51,20 @@ export default function Game({ user }) {
         .limit(1);
 
       if (setErr) {
-        alert('問題セット取得に失敗: ' + setErr.message);
+        alert('もんだいセット しゅとくに しっぱい: ' + setErr.message);
         navigate('/');
         return;
       }
 
       if (!sets || sets.length === 0) {
-        alert('この難易度の問題がありません');
+        alert('この なんいど の もんだいは ありません');
         navigate('/');
         return;
       }
 
       const setId = sets[0].id;
 
+      // ② questions を取得
       const { data: qs, error: qErr } = await supabase
         .from('questions')
         .select('id, a, b, c, d')
@@ -69,7 +72,7 @@ export default function Game({ user }) {
         .order('id');
 
       if (qErr) {
-        alert('問題取得に失敗: ' + qErr.message);
+        alert('もんだい しゅとくに しっぱい: ' + qErr.message);
         navigate('/');
         return;
       }
@@ -87,9 +90,9 @@ export default function Game({ user }) {
     })();
   }, [user, difficulty, navigate]);
 
-  if (!user) return <p>ログイン情報がありません…</p>;
-  if (!difficulty) return <p>難易度が選択されていません。戻って選択してください。</p>;
-  if (questions.length === 0) return <p>問題を読み込み中...</p>;
+  if (!user) return <p>ログイン してください…</p>;
+  if (!difficulty) return <p>なんいど を えらんでください</p>;
+  if (questions.length === 0) return <p>もんだいを よみこみちゅう…</p>;
 
   const q = questions[current];
   const A = q.a;
@@ -98,101 +101,39 @@ export default function Game({ user }) {
   const D = q.d;
 
   const questionText = `${A}が${B}こ、${C}が${D}こあります。ぜんぶでなんこ？`;
-
-  // ✅ 正答は数として計算 → 文字列化（0でもOK）
-  const correctAnswer = String(Number(B) + Number(D));
+  const correctAnswer = String(Number(B) + Number(D)); // 0もOK、2けた以上もOK
 
   const leftSrc = leftItem ? ITEM_IMAGE[leftItem] : null;
   const rightSrc = rightItem ? ITEM_IMAGE[rightItem] : null;
 
-  const handleClickA = () => {
+  // ===== タップ操作（A/C→表示、B/D→枚数） =====
+  const handleTapA = () => {
     setLeftItem(A);
     setLeftCount(1);
   };
-  const handleClickC = () => {
+  const handleTapC = () => {
     setRightItem(C);
     setRightCount(1);
   };
-  const handleClickB = () => {
-    if (!leftItem) return;
-    setLeftCount(Number(B));
+  const handleTapB = () => {
+    if (!leftItem) return;     // 先にAをタップ
+    setLeftCount(Number(B));   // B枚表示
   };
-  const handleClickD = () => {
-    if (!rightItem) return;
-    setRightCount(Number(D));
+  const handleTapD = () => {
+    if (!rightItem) return;    // 先にCをタップ
+    setRightCount(Number(D));  // D枚表示
   };
 
-  // =========================
-  // ✅ キーパッド操作
-  // =========================
-
-  // 2桁以上OK：文字列にどんどん追加
-  // 先頭0は「0」単体以外では避ける（例：0→5で「5」）
+  // ===== キーパッド（小さめ） =====
   const appendDigit = (d) => {
-    const digit = String(d);
-
-    setInput((prev) => {
-      if (prev === '0') {
-        return digit; // 0の次に数字が来たら置き換え
-      }
-      return prev + digit;
-    });
+    setInput((prev) => (prev === '0' ? String(d) : prev + String(d)));
   };
-
-  const backspace = () => {
-    setInput((prev) => prev.slice(0, -1));
-  };
-
-  const clearInput = () => {
-    setInput('');
-  };
-
-  const saveResultToDb = async (nextResults, durationMs) => {
-    const { data: resRow, error: resErr } = await supabase
-      .from('results')
-      .insert([{
-        student_id: user.id,
-        difficulty,
-        correct_count: nextResults.filter(r => r.correct).length,
-        total: nextResults.length,
-        duration_ms: durationMs ?? null,
-      }])
-      .select('id')
-      .single();
-
-    if (resErr) {
-      alert('結果の保存に失敗: ' + resErr.message);
-      return;
-    }
-
-    const resultId = resRow.id;
-
-    const items = nextResults.map(r => ({
-      result_id: resultId,
-      question_text: r.question,
-      correct_answer: r.correctAnswer,
-      user_answer: r.userAnswer,
-      is_correct: r.correct,
-    }));
-
-    const { error: itemErr } = await supabase.from('result_items').insert(items);
-    if (itemErr) {
-      alert('回答詳細の保存に失敗: ' + itemErr.message);
-      return;
-    }
-  };
+  const backspace = () => setInput((prev) => prev.slice(0, -1));
+  const clearInput = () => setInput('');
 
   const submitAnswer = async () => {
-    // ✅ 入力が空なら送信しない（0はOK：'0'は空じゃない）
     if (input === '') return;
 
-    // ✅ 数字以外は弾く（キーパッドだけなら基本起きないが保険）
-    if (!/^\d+$/.test(input)) {
-      alert('数字のみ入力してください');
-      return;
-    }
-
-    // ✅ 正答が0でもOK（'0' === '0'）
     const correct = input.trim() === correctAnswer.trim();
 
     const currentResult = {
@@ -209,139 +150,165 @@ export default function Game({ user }) {
 
     if (current + 1 < questions.length) {
       setCurrent(current + 1);
-      setLeftItem(null); setRightItem(null);
-      setLeftCount(0); setRightCount(0);
+
+      // 次の問題に行ったら画像リセット（残したいならここ消してOK）
+      setLeftItem(null);
+      setRightItem(null);
+      setLeftCount(0);
+      setRightCount(0);
       return;
     }
 
-    const endTimeMs = Date.now();
-    const durationMs = startTimeMs != null ? endTimeMs - startTimeMs : null;
-
-    await saveResultToDb(nextResults, durationMs);
-
-    navigate('/result', {
-      state: { results: nextResults, durationMs, difficulty },
-    });
-  };
-
-  // Enterキーでも送信（PC向け）
-  const onKeyDown = (e) => {
-    if (e.key === 'Enter') submitAnswer();
-    if (e.key === 'Backspace') backspace();
-    if (e.key === 'Escape') clearInput();
+    // 最後：結果へ
+    navigate('/result', { state: { results: nextResults } });
   };
 
   return (
-    <div style={{ maxWidth: '850px', margin: '40px auto' }}>
-      <h2>問題 {current + 1} / {questions.length}</h2>
+    <div style={{ maxWidth: '850px', margin: '40px auto', padding: '0 12px' }}>
+      <h2 style={{ fontSize: 28 }}>
+        もんだい {current + 1} / {questions.length}
+      </h2>
 
-      {/* 問題文：A/Cクリック→画像、B/Dクリックで枚数表示 */}
-      <div style={{ fontSize: '18px', lineHeight: 1.8 }}>
+      {/* ✅ 問題文：A/C/B/D タップできる（文字大きめ） */}
+      <div style={{ fontSize: 30, lineHeight: 1.8, marginTop: 10 }}>
         <span
-          onClick={handleClickA}
-          style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
+          onClick={handleTapA}
+          style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '900' }}
+          title="A を タップ"
         >
           {A}
         </span>
         <span>が</span>
+
         <span
-          onClick={handleClickB}
+          onClick={handleTapB}
           style={{
             cursor: leftItem ? 'pointer' : 'not-allowed',
             textDecoration: leftItem ? 'underline' : 'none',
-            fontWeight: 'bold'
+            fontWeight: '900',
           }}
-          title={leftItem ? 'クリックで左を枚数表示' : '先にAをクリック'}
+          title={leftItem ? 'B を タップ（ひだりを たくさん だす）' : 'さきに A を タップ'}
         >
           {B}
         </span>
+
         <span>こ、</span>
 
         <span
-          onClick={handleClickC}
-          style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
+          onClick={handleTapC}
+          style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '900' }}
+          title="C を タップ"
         >
           {C}
         </span>
         <span>が</span>
+
         <span
-          onClick={handleClickD}
+          onClick={handleTapD}
           style={{
             cursor: rightItem ? 'pointer' : 'not-allowed',
             textDecoration: rightItem ? 'underline' : 'none',
-            fontWeight: 'bold'
+            fontWeight: '900',
           }}
-          title={rightItem ? 'クリックで右を枚数表示' : '先にCをクリック'}
+          title={rightItem ? 'D を タップ（みぎを たくさん だす）' : 'さきに C を タップ'}
         >
           {D}
         </span>
+
         <span>こあります。ぜんぶでなんこ？</span>
       </div>
 
-      {/* ✅ キーパッド入力専用表示 */}
+      {/* 入力表示（readOnly） */}
       <input
-        type="text"
         value={input}
         readOnly
-        onKeyDown={onKeyDown}
-        placeholder="答えを入力"
+        placeholder="こたえ"
         style={{
           width: '100%',
-          fontSize: '22px',
-          marginTop: '16px',
-          padding: '10px',
+          fontSize: 30,
+          padding: 12,
           textAlign: 'center',
-          letterSpacing: '2px',
+          marginTop: 16,
         }}
       />
 
-      {/* ✅ キーパッド（0〜9 / クリア / 1文字消す） */}
-      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+      {/* 🔢 キーパッド（小さめ） */}
+      <div
+      style={{
+        marginTop: 12,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 80px)', // ← 横幅を固定
+        justifyContent: 'center',
+        gap: 8,
+      }}
+    >
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <button
             key={n}
             onClick={() => appendDigit(n)}
-            style={{ padding: '16px 0', fontSize: 20 }}
+            style={{ padding: '10px 0', fontSize: 18 }}
           >
             {n}
           </button>
         ))}
-
-        <button onClick={clearInput} style={{ padding: '16px 0', fontSize: 18 }}>
+        <button onClick={clearInput} style={{ padding: '10px 0', fontSize: 16 }}>
           C
         </button>
-
-        <button onClick={() => appendDigit(0)} style={{ padding: '16px 0', fontSize: 20 }}>
+        <button onClick={() => appendDigit(0)} style={{ padding: '10px 0', fontSize: 18 }}>
           0
         </button>
-
-        <button onClick={backspace} style={{ padding: '16px 0', fontSize: 18 }}>
+        <button onClick={backspace} style={{ padding: '10px 0', fontSize: 16 }}>
           ⌫
         </button>
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        <button onClick={submitAnswer} disabled={input === ''}>
-          OK / 次へ
-        </button>
-        <button onClick={() => navigate('/')} style={{ marginLeft: 12 }}>
-          戻る
-        </button>
-      </div>
+      {/* 🟢 OKボタン（大きく） */}
+      <button
+        onClick={submitAnswer}
+        disabled={input === ''}
+        style={{
+          marginTop: 18,
+          width: '100%',
+          padding: '18px 0',
+          fontSize: 28,
+          fontWeight: '900',
+          backgroundColor: '#4caf50',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 10,
+          cursor: input === '' ? 'not-allowed' : 'pointer',
+          opacity: input === '' ? 0.6 : 1,
+        }}
+      >
+        OK
+      </button>
 
-      {/* 画像（枠・ラベル無し） */}
-      <div style={{ marginTop: '28px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      {/* もどる */}
+      <button onClick={() => navigate('/')} style={{ marginTop: 12 }}>
+        もどる
+      </button>
+
+      {/* 🖼 画像（枠なし・ラベルなし） */}
+      <div style={{ marginTop: 24 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '18px',
+          }}
+        >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-            {leftSrc && Array.from({ length: leftCount }, (_, i) => (
-              <img key={i} src={leftSrc} alt={leftItem} style={imageStyle} />
-            ))}
+            {leftSrc &&
+              Array.from({ length: leftCount }, (_, i) => (
+                <img key={i} src={leftSrc} alt={leftItem} style={imageStyle} />
+              ))}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-            {rightSrc && Array.from({ length: rightCount }, (_, i) => (
-              <img key={i} src={rightSrc} alt={rightItem} style={imageStyle} />
-            ))}
+            {rightSrc &&
+              Array.from({ length: rightCount }, (_, i) => (
+                <img key={i} src={rightSrc} alt={rightItem} style={imageStyle} />
+              ))}
           </div>
         </div>
       </div>
